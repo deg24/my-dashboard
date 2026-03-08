@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>내 자산 대시보드</title>
+  <style>
+    /* 배경 및 기본 폰트 */
+    body {
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: #ffffff;
+      font-family: 'Arial', sans-serif;
+      padding: 50px;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .dashboard { text-align: center; }
+
+    /* 경험치 바 디자인 */
+    .exp-container {
+      width: 100%;
+      height: 30px;
+      background-color: rgba(0, 0, 0, 0.5);
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: inset 0 2px 5px rgba(0,0,0,0.7);
+      margin-bottom: 30px;
+    }
+    .exp-bar {
+      height: 100%;
+      width: 42%;
+      background: linear-gradient(90deg, #4da6ff, #00ffcc);
+      border-radius: 15px 0 0 15px;
+      box-shadow: 0 0 15px rgba(0, 255, 204, 0.6);
+      transition: width 1s ease-in-out;
+    }
+
+    /* 버튼 스킨 */
+    button {
+      background-color: #ff4d4d;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 20px;
+      font-weight: bold;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      transform: scale(1.05);
+    }
+
+    /* 카드 레이아웃 (Flexbox) 및 유리 질감 (Glassmorphism) */
+    .asset-dashboard {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      margin-top: 30px;
+    }
+    .asset-card {
+      width: 30%;
+      padding: 20px;
+      border-radius: 15px;
+      text-align: left;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      border-top: 4px solid #4da6ff;
+    }
+    .asset-card h3 { margin-top: 0; color: #94a3b8; font-size: 14px; }
+    .asset-card p { font-size: 12px; color: #b1c1d8; margin-bottom: 15px; }
+    .asset-card .amount { font-size: 22px; color: #ffffff; margin: 0; }
+    .active-card { border-top: 4px solid #00ffcc; }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <h2 style="color:#ffd700; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">🚀 전역 퀘스트: 3천만 원 달성 프로젝트</h2>
+    <p id="status-text" style="font-size: 18px;">현재 달성률: 42.0% (1,260만 원 / 3,000만 원)</p>
+    
+    <div class="exp-container">
+      <div id="exp-bar" class="exp-bar"></div>
+    </div>
+    
+    <button id="farm-btn">3월 월급 파밍 시작</button>
+
+    <div class="asset-dashboard">
+      <div class="asset-card">
+        <h3>전투 대기 자금</h3>
+        <p>입출금</p>
+        <h4 id="combat-amount" class="amount">300,000원</h4>
+      </div>
+      <div class="asset-card active-card">
+        <h3>안전 구역</h3>
+        <p>군적금, 청약, 특판</p>
+        <h4 id="safe-amount" class="amount">9,750,000원</h4>
+      </div>
+      <div class="asset-card">
+        <h3>공격 및 투자 진형</h3>
+        <p>해외주식, 금현물, ISA</p>
+        <h4 class="amount">2,550,000원</h4>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentGold = 12600000;
+    const targetGold = 30000000;
+    let combatGold = 300000;
+    let safeGold = 9750000;
+    const investGold = 2550000;
+    let currentMonth = 3; 
+
+    const farmBtn = document.getElementById("farm-btn");
+    const statusText = document.getElementById("status-text");
+    const expBar = document.getElementById("exp-bar");
+    const combatText = document.getElementById("combat-amount");
+    const safeText = document.getElementById("safe-amount");
+
+    farmBtn.addEventListener("click", function() {
+      if (currentMonth > 12) {
+        alert("🎉 이미 전역하셨습니다! 민간인 서버로 접속해 주세요.");
+        return;
+      }
+
+      let monthlyCombat = 0; 
+      let monthlySafe = 0;
+
+      if (currentMonth >= 3 && currentMonth <= 5) {
+        monthlySafe = 900000; 
+        monthlyCombat = 300000;
+      } else if (currentMonth >= 6 && currentMonth <= 11) {
+        monthlySafe = 900000;
+        monthlyCombat = 600000;
+      } else if (currentMonth === 12) {
+        monthlySafe = 0;
+        monthlyCombat = 400000;
+      }
+
+      combatGold += monthlyCombat;
+      safeGold += monthlySafe;
+      currentGold = combatGold + safeGold + investGold;
+
+      combatText.innerText = combatGold.toLocaleString() + "원";
+      safeText.innerText = safeGold.toLocaleString() + "원";
+
+      let percentage = (currentGold / targetGold) * 100;
+      statusText.innerText = `현재 달성률: ${percentage.toFixed(1)}% (${(currentGold / 10000).toLocaleString()}만 원 / 3,000만 원)`;
+      expBar.style.width = percentage + "%";
+
+      currentMonth++;
+
+      if (currentMonth <= 12) {
+        farmBtn.innerText = `${currentMonth}월 월급 파밍 시작`;
+      } else {
+        farmBtn.innerText = "전역 퀘스트 완료!";
+        farmBtn.style.backgroundColor = "#ffd700"; 
+        farmBtn.style.color = "#000";
+      }
+    });
+  </script>
+</body>
+</html>
