@@ -73,6 +73,34 @@
     .asset-card p { font-size: 12px; color: #b1c1d8; margin-bottom: 15px; }
     .asset-card .amount { font-size: 22px; color: #ffffff; margin: 0; }
     .active-card { border-top: 4px solid #00ffcc; }
+
+    /* 📱 모바일 화면 최적화 (반응형 웹 스킬) */
+    @media (max-width: 768px) {
+      .asset-dashboard {
+        flex-direction: column; /* 가로로 나열되던 카드를 세로로 쌓습니다 */
+        align-items: center; 
+      }
+      .asset-card {
+        width: 90%; /* 모바일에서는 카드가 화면을 넓게 쓰도록 90%로 확장 */
+        margin-bottom: 15px; /* 세로로 쌓인 카드들 사이에 여백 주기 */
+      }
+    }
+    
+    /* 🔄 초기화 버튼 디자인 (작고 눈에 덜 띄게) */
+    #reset-btn {
+      background-color: transparent;
+      color: #94a3b8;
+      border: 1px solid #94a3b8;
+      padding: 8px 15px;
+      font-size: 14px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    #reset-btn:hover {
+      background-color: #334155;
+      color: white;
+    }
   </style>
 </head>
 <body>
@@ -85,6 +113,7 @@
     </div>
     
     <button id="farm-btn">3월 월급 파밍 시작</button>
+    <button id="reset-btn">🔄 데이터 초기화</button>
 
     <div class="asset-dashboard">
       <div class="asset-card">
@@ -107,78 +136,92 @@
 
   <script>
     // 1. 초기 스탯 불러오기 (메모리 카드에 데이터가 있으면 가져오고, 없으면(||) 기본값 세팅)
-let currentGold = parseInt(localStorage.getItem("currentGold")) || 12600000;
-let combatGold = parseInt(localStorage.getItem("combatGold")) || 300000;
-let safeGold = parseInt(localStorage.getItem("safeGold")) || 9750000;
-let currentMonth = parseInt(localStorage.getItem("currentMonth")) || 3;
-const investGold = 2550000; // 고정값
-const targetGold = 30000000; // 고정값
+    let currentGold = parseInt(localStorage.getItem("currentGold")) || 12600000;
+    let combatGold = parseInt(localStorage.getItem("combatGold")) || 300000;
+    let safeGold = parseInt(localStorage.getItem("safeGold")) || 9750000;
+    let currentMonth = parseInt(localStorage.getItem("currentMonth")) || 3;
+    const investGold = 2550000; // 고정값
+    const targetGold = 30000000; // 고정값
+    
+    // 2. 조작할 HTML 타겟팅
+    const farmBtn = document.getElementById("farm-btn");
+    const statusText = document.getElementById("status-text");
+    const expBar = document.getElementById("exp-bar");
+    const combatText = document.getElementById("combat-amount");
+    const safeText = document.getElementById("safe-amount");
+    
+    // 🌟 3. 화면 업데이트 함수 (접속하자마자 세이브 파일을 화면에 그려줌)
+    function updateScreen() {
+      combatText.innerText = combatGold.toLocaleString() + "원";
+      safeText.innerText = safeGold.toLocaleString() + "원";
+    
+      let percentage = (currentGold / targetGold) * 100;
+      statusText.innerText = `현재 달성률: ${percentage.toFixed(1)}% (${(currentGold / 10000).toLocaleString()}만 원 / 3,000만 원)`;
+      expBar.style.width = percentage + "%";
+    
+      if (currentMonth <= 12) {
+        farmBtn.innerText = `${currentMonth}월 월급 파밍 시작`;
+      } else {
+        farmBtn.innerText = "전역 퀘스트 완료!";
+        farmBtn.style.backgroundColor = "#ffd700"; 
+        farmBtn.style.color = "#000";
+      }
+    }
+    
+    // 처음 접속할 때 화면 업데이트 한 번 실행!
+    updateScreen();
+    
+    // 4. 액티브 스킬 (버튼 클릭)
+    farmBtn.addEventListener("click", function() {
+      if (currentMonth > 12) {
+        alert("🎉 이미 전역하셨습니다! 민간인 서버로 접속해 주세요.");
+        return;
+      }
+    
+      let monthlyCombat = 0; 
+      let monthlySafe = 0;
+    
+      if (currentMonth >= 3 && currentMonth <= 5) {
+        monthlySafe = 900000; 
+        monthlyCombat = 300000;
+      } else if (currentMonth >= 6 && currentMonth <= 11) {
+        monthlySafe = 900000;
+        monthlyCombat = 600000;
+      } else if (currentMonth === 12) {
+        monthlySafe = 0;
+        monthlyCombat = 400000;
+      }
+    
+      // 자산 분배
+      combatGold += monthlyCombat;
+      safeGold += monthlySafe;
+      currentGold = combatGold + safeGold + investGold;
+      currentMonth++; // 달력 넘기기
+    
+      // 🌟 핵심 마법: 변화된 스탯을 메모리 카드에 덮어쓰기(Save)
+      localStorage.setItem("currentGold", currentGold);
+      localStorage.setItem("combatGold", combatGold);
+      localStorage.setItem("safeGold", safeGold);
+      localStorage.setItem("currentMonth", currentMonth);
+    
+      // 저장된 스탯을 바탕으로 화면 다시 그리기
+      updateScreen();
+      alert("자동 저장 완료!");
+    });
 
-// 2. 조작할 HTML 타겟팅
-const farmBtn = document.getElementById("farm-btn");
-const statusText = document.getElementById("status-text");
-const expBar = document.getElementById("exp-bar");
-const combatText = document.getElementById("combat-amount");
-const safeText = document.getElementById("safe-amount");
-
-// 🌟 3. 화면 업데이트 함수 (접속하자마자 세이브 파일을 화면에 그려줌)
-function updateScreen() {
-  combatText.innerText = combatGold.toLocaleString() + "원";
-  safeText.innerText = safeGold.toLocaleString() + "원";
-
-  let percentage = (currentGold / targetGold) * 100;
-  statusText.innerText = `현재 달성률: ${percentage.toFixed(1)}% (${(currentGold / 10000).toLocaleString()}만 원 / 3,000만 원)`;
-  expBar.style.width = percentage + "%";
-
-  if (currentMonth <= 12) {
-    farmBtn.innerText = `${currentMonth}월 월급 파밍 시작`;
-  } else {
-    farmBtn.innerText = "전역 퀘스트 완료!";
-    farmBtn.style.backgroundColor = "#ffd700"; 
-    farmBtn.style.color = "#000";
-  }
-}
-
-// 처음 접속할 때 화면 업데이트 한 번 실행!
-updateScreen();
-
-// 4. 액티브 스킬 (버튼 클릭)
-farmBtn.addEventListener("click", function() {
-  if (currentMonth > 12) {
-    alert("🎉 이미 전역하셨습니다! 민간인 서버로 접속해 주세요.");
-    return;
-  }
-
-  let monthlyCombat = 0; 
-  let monthlySafe = 0;
-
-  if (currentMonth >= 3 && currentMonth <= 5) {
-    monthlySafe = 900000; 
-    monthlyCombat = 300000;
-  } else if (currentMonth >= 6 && currentMonth <= 11) {
-    monthlySafe = 900000;
-    monthlyCombat = 600000;
-  } else if (currentMonth === 12) {
-    monthlySafe = 0;
-    monthlyCombat = 400000;
-  }
-
-  // 자산 분배
-  combatGold += monthlyCombat;
-  safeGold += monthlySafe;
-  currentGold = combatGold + safeGold + investGold;
-  currentMonth++; // 달력 넘기기
-
-  // 🌟 핵심 마법: 변화된 스탯을 메모리 카드에 덮어쓰기(Save)
-  localStorage.setItem("currentGold", currentGold);
-  localStorage.setItem("combatGold", combatGold);
-  localStorage.setItem("safeGold", safeGold);
-  localStorage.setItem("currentMonth", currentMonth);
-
-  // 저장된 스탯을 바탕으로 화면 다시 그리기
-  updateScreen();
-  alert("자동 저장 완료!");
-});
+    // 🔄 초기화(리셋) 스킬 발동
+    const resetBtn = document.getElementById("reset-btn");
+    
+    resetBtn.addEventListener("click", function() {
+      // 유저에게 진짜 초기화할 것인지 한 번 더 묻습니다
+      const confirmReset = confirm("정말로 데이터를 2026년 3월 초기 상태로 되돌리시겠습니까?");
+      
+      if (confirmReset) {
+        localStorage.clear(); // 🌟 로컬 스토리지 메모리 카드 포맷!
+        alert("데이터가 초기화되었습니다. 시간이 역행합니다!");
+        window.location.reload(); // 브라우저 새로고침
+      }
+    });
   </script>
 </body>
 </html>
